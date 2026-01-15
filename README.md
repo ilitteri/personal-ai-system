@@ -6,25 +6,18 @@ A lightweight file-based organization system that gives AI agents persistent mem
 
 1. Clone to `~/Personal`:
    ```bash
-   git clone https://github.com/ivanlitteri/personal-ai-system.git ~/Personal
+   git clone https://github.com/ilitteri/personal-ai-system.git ~/Personal
    ```
 
-2. Add alias to `~/.zshrc` or `~/.bashrc`:
+2. Run setup:
    ```bash
-   alias claudio='ln -sf ~/Personal/CLAUDE.md ./CLAUDE.md && claude'
+   cd ~/Personal
+   make setup
    ```
 
-3. Allow Claude Code to read Personal without prompts — add to `~/.claude/settings.json`:
-   ```json
-   {
-     "permissions": {
-       "allow": ["Read(~/Personal/**)"]
-     }
-   }
-   ```
-
-4. Use in any project:
+3. Reload shell and use in any project:
    ```bash
+   source ~/.zshrc  # or open new terminal
    cd your-project
    claudio
    ```
