@@ -49,6 +49,13 @@ Where workstream status is one of:
 
 These apply to ALL work. Customize this section with your own rules.
 
+### Personal AI System
+
+- **NEVER modify `~/Personal/CLAUDE.md`** — this is the global source of truth, managed by the user only
+- When asked to add context files, use the `contexts/` directory
+- If git shows `T` status on a file (type change), investigate before writing — it may be a symlink
+- If unsure about any file's role in the personal AI system structure, ask first
+
 ### Git & Commits
 
 - Do NOT add yourself as co-author of git commits
