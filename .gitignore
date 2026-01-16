@@ -1,0 +1,7 @@
+# Personal files - not part of template
+checkpoints/
+contexts/*.md
+!contexts/_template.md
+ethrex_l2_research_sources.md
+remote-sessions.yaml
+servers.yaml
