@@ -22,7 +22,7 @@ This workflow covers:
 
 These rules must NEVER be violated:
 
-1. **Never run parallel benchmarks** — Resource contention invalidates results
+1. **Only run parallel benchmarks when they won't affect results** — GPU/CPU contention invalidates results; parallel is OK for independent machines or non-overlapping resources
 2. **Never skip baseline** — All comparisons require a valid baseline
 3. **Never modify code during a benchmark run** — Invalidates the run
 4. **Always record before deciding** — Log results before making keep/discard decisions
