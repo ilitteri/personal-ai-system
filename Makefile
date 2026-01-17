@@ -22,6 +22,13 @@ setup:
 	else \
 		echo "✓ Alias already exists in $(SHELL_CONFIG)"; \
 	fi
+	@# Add claudios alias (skip permissions) if not already present
+	@if ! grep -q "alias claudios=" $(SHELL_CONFIG) 2>/dev/null; then \
+		echo "alias claudios='ln -sf ~/Personal/CLAUDE.md ./CLAUDE.md && claude --notify --dangerously-skip-permissions'" >> $(SHELL_CONFIG); \
+		echo "✓ Added 'claudios' alias to $(SHELL_CONFIG)"; \
+	else \
+		echo "✓ Alias 'claudios' already exists in $(SHELL_CONFIG)"; \
+	fi
 	@# Configure Claude Code permissions
 	@mkdir -p $(HOME)/.claude
 	@if [ -f $(HOME)/.claude/settings.json ]; then \
@@ -36,4 +43,4 @@ setup:
 	fi
 	@echo ""
 	@echo "Setup complete! Run 'source $(SHELL_CONFIG)' or open a new terminal."
-	@echo "Then use 'claudio' in any project directory."
+	@echo "Then use 'claudio' or 'claudios' (skip permissions) in any project directory."
