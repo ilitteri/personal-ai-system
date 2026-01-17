@@ -17,7 +17,7 @@ setup:
 	@if ! grep -q "alias claudio=" $(SHELL_CONFIG) 2>/dev/null; then \
 		echo "" >> $(SHELL_CONFIG); \
 		echo "# Claude Code with personal rules" >> $(SHELL_CONFIG); \
-		echo "alias claudio='ln -sf ~/Personal/CLAUDE.md ./CLAUDE.md && claude'" >> $(SHELL_CONFIG); \
+		echo "alias claudio='ln -sf ~/Personal/CLAUDE.md ./CLAUDE.md && claude --notify'" >> $(SHELL_CONFIG); \
 		echo "✓ Added 'claudio' alias to $(SHELL_CONFIG)"; \
 	else \
 		echo "✓ Alias already exists in $(SHELL_CONFIG)"; \
