@@ -49,26 +49,84 @@ Where workstream status is one of:
 
 These apply to ALL work. Customize this section with your own rules.
 
+**Optimization principle:** Execute checks from cheapest to most expensive. Stop early if a cheap check fails.
+
 ### Personal AI System
 
-- **NEVER modify `~/Personal/CLAUDE.md`** — this is the global source of truth, managed by the user only
+- **NEVER modify `~/Personal/CLAUDE.md` if current directory is ~/Personal** — this is the global source of truth, managed by the user only
 - When asked to add context files, use the `contexts/` directory
 - If git shows `T` status on a file (type change), investigate before writing — it may be a symlink
 - If unsure about any file's role in the personal AI system structure, ask first
+
+### Security
+
+- **Never read API keys, private keys, or environment files** (`.env`, `.env.local`, `credentials.json`, `*.pem`, `*.key`, etc.)
+- If a task requires environment variables, ask the user to provide only the variable names (not values)
+- Never log, display, or include sensitive data in outputs
+- If accidentally exposed to sensitive data, do not reference or repeat it
+
+### Documentation
+
+When documenting, **always include**:
+
+1. **Step-by-step instructions** for running the project (Nixfile/Makefile)
+2. **Working examples** with expected inputs and outputs
+3. **Architecture diagrams** (system overview, component interaction, data flow)
+4. **Technical design** (decisions, rationale, trade-offs, constraints)
+5. **References** (links to sources, related docs, external resources)
 
 ### Git & Commits
 
 - Do NOT add yourself as co-author of git commits
 - Do NOT commit binary files
-- Always run linter, formatter, and build check (if applicable) before committing
+
+**Before committing, check in order (stop if any fails):**
+
+| Step | Check | Cost |
+|------|-------|------|
+| 1 | Nixfile exists (`shell.nix` or `flake.nix`) | Cheap |
+| 2 | Makefile exists with proper targets | Cheap |
+| 3 | Lint passes | Low |
+| 4 | Format passes | Low |
+| 5 | Tests pass | Medium |
+| 6 | Task is complete (no partial work) | Medium |
+| 7 | Documentation is complete | High |
+
+**Commit message format:**
+- Single detailed message describing changes
+- What was added/changed/fixed, why it was necessary, important details
+- No title prefix (no "docs:", "feat:", etc.)
+- No co-author attribution
+- Organize commits to be easily reviewable (logical units of work)
 
 ### CI & Quality
 
 - If the project has CI workflows, understand them and run relevant checks locally before creating a PR
 
-### Code Reviews
+### Code Reviews / PR Reviews
 
-<!-- Add your code review rules here -->
+**Before reviewing, check in order (stop if any fails):**
+
+| Step | Check | Cost |
+|------|-------|------|
+| 1 | CI has finished | Cheap |
+| 2 | CI is passing | Cheap |
+| 3 | PR description matches issue(s) | Low |
+| 4 | Check typos/grammar | Low |
+| 5 | Tests make sense | Medium |
+| 6 | Deep bug analysis (use extended thinking) | High |
+| 7 | Suggest improvements | High |
+
+- Do not apply Copilot review suggestions without user approval
+- Present suggestions to user first
+
+### Testing
+
+- Respect project-specific testing rules
+- Follow existing test patterns in the codebase
+- Ensure tests are meaningful, not just for coverage
+- **Do not only test happy paths** — include error cases, edge cases, and boundary conditions
+- Include: unit tests, integration tests, edge cases
 
 ### Code Sources & IP
 
@@ -99,6 +157,17 @@ Before starting work:
 ### Pull Requests
 
 - Do NOT add "Generated with Claude Code" or similar attributions to PR descriptions
+- No self-references (do not mention Claude, AI, or automated tools)
+- Use repository PR template; fill out all sections
+- **Wait for user approval** before creating PR — present draft description first
+- Keep PR description in sync with changes
+
+**PR description template (if no repo template exists):**
+- Motivation: why this change is needed
+- Description: brief description and implementation approach
+- How to Test: step-by-step instructions
+- Related Issues: closes #XXX
+- Checklist: docs updated, tests added, lint passes, etc.
 
 ---
 
@@ -222,3 +291,33 @@ ziskemu -e <ELF> -i <INPUT> -D -X -S
 - SP1: https://docs.succinct.xyz/docs/sp1/introduction
 - RISC0: https://dev.risczero.com/api
 - ethrex zkVM docs: PR #5872 (`docs/prover/zkvm/`)
+
+---
+
+## Quick Reference Checklists
+
+### Before Commit
+
+- [ ] Nixfile exists
+- [ ] Makefile exists
+- [ ] Lint passes
+- [ ] Format passes
+- [ ] Tests pass
+- [ ] Task is fully complete
+- [ ] Documentation complete (with examples, diagrams, references)
+
+### Before PR Review
+
+- [ ] CI has finished running
+- [ ] CI is passing
+
+### Before Creating PR
+
+- [ ] PR description drafted with Motivation and Description
+- [ ] User has approved description
+- [ ] No self-references in description
+- [ ] Template filled correctly
+
+### After Applying PR Feedback
+
+- [ ] PR description updated to reflect changes
