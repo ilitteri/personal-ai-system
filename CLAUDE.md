@@ -95,9 +95,24 @@ When documenting, **always include**:
 **Commit message format:**
 - Single detailed message describing changes
 - What was added/changed/fixed, why it was necessary, important details
-- No title prefix (no "docs:", "feat:", etc.)
+- No title prefix (no "docs:", "feat:", "Address X:", "Fix Y:", etc.) — start directly with the description
 - No co-author attribution
-- Organize commits to be easily reviewable (logical units of work)
+- Organize commits to be easily reviewable (logical units of work) — one logical change per commit, not multiple unrelated changes bundled together
+
+**Example (good):**
+```
+Move SequencerState to ethrex-l2-common and remove SequencerStatusProvider trait
+to simplify the monitor architecture. This avoids a trait with only one implementation.
+```
+
+**Example (bad):**
+```
+Address PR feedback: move SequencerState and fix typo
+
+- Move SequencerState to l2-common
+- Fix typo in error.rs
+```
+(Has title prefix "Address PR feedback:", bundles unrelated changes)
 
 ### CI & Quality
 
@@ -119,6 +134,39 @@ When documenting, **always include**:
 
 - Do not apply Copilot review suggestions without user approval
 - Present suggestions to user first
+
+**Suggestion template (informal):**
+1. Problem description
+2. Code suggestion
+3. Brief explanation
+
+**PR review tracking (`~/Personal/contexts/pr-reviews.md`):**
+
+| Section | Purpose | Statuses |
+|---------|---------|----------|
+| Reviewing | Others' PRs I'm reviewing | Pending review, Feedback given, Re-review needed, Approved |
+| My PRs | PRs I authored | Draft, Open, Feedback received, Changes pushed, Approved, Merged |
+| Completed | Closed PRs (either role) | — |
+
+Update when:
+- Starting a review → add to "Reviewing" as "Pending review"
+- Giving feedback → "Feedback given"
+- Author pushes changes → "Re-review needed"
+- Receiving feedback on my PR → "Feedback received"
+- Pushing changes after feedback → "Changes pushed"
+- PR merged/closed → move to "Completed"
+
+Also update brief status in project context file.
+
+**TODO tracking (`~/Personal/contexts/todos.md`):**
+- Add tasks to "Active" with project, priority (High/Medium/Low), and optional due date
+- Move to "Completed" when done
+- Also add brief entry in project context file under "TODOs" section
+
+**Ideas tracking (`~/Personal/contexts/ideas.md`):**
+- Add ideas to "Active" with project
+- Move to "Explored" with outcome when investigated
+- Also add brief entry in project context file under "Ideas" section
 
 ### Testing
 
@@ -292,6 +340,102 @@ ziskemu -e <ELF> -i <INPUT> -D -X -S
 - RISC0: https://dev.risczero.com/api
 - ethrex zkVM docs: PR #5872 (`docs/prover/zkvm/`)
 
+### ZisK Profiling Workflow
+
+**Step 1: Generate inputs FIRST (critical - state gets pruned)**
+```bash
+# Generate inputs for a range of blocks (always do this before any proving/profiling)
+ethrex-replay generate-input --from <START> --to <END> --rpc-url http://157.180.1.98:8545 --output-dir ./inputs
+
+# Or single block
+ethrex-replay generate-input --block <N> --rpc-url http://157.180.1.98:8545 --output-dir ./inputs
+```
+
+**Step 2: Build guest program**
+```bash
+cd crates/l2/prover/src/guest_program/src/zisk
+cargo-zisk build --release
+# ELF at: target/riscv64ima-zisk-zkvm-elf/release/zkvm-zisk-program
+```
+
+**Step 3: Profile with ziskemu**
+```bash
+export ELF="path/to/zkvm-zisk-program"
+ziskemu -e $ELF -i ./inputs/ethrex_mainnet_<BLOCK>_input.bin -D -X -S > profile.txt
+```
+
+**Profile output sections:**
+- `STEPS` - Total execution steps (correlates with proving time)
+- `COST BY OPCODE` - Which operations are expensive
+- `TOP STEP FUNCTIONS` - Which functions consume the most steps
+
+### RPC with debug_executionWitness
+
+```
+http://157.180.1.98:8545
+```
+
+This RPC supports `debug_executionWitness` which is required for generating zkVM inputs.
+
+---
+
+## Benchmarking & Optimization
+
+**Full workflow:** `~/Personal/workflows/benchmarking-workflow.md`
+
+### Critical Rules (Never Violate)
+
+1. **Only run parallel benchmarks when they won't affect results** — GPU/CPU contention invalidates results
+2. **Never skip baseline** — All comparisons require a valid baseline
+3. **Never modify code during a benchmark run** — Invalidates the run
+4. **Always record before deciding** — Log results before making keep/discard decisions
+5. **Always test correctness after optimization** — Faster but wrong is useless
+6. **Always use multiple inputs** — Single-input optimizations may not generalize
+
+### Workflow Phases
+
+| Phase | Key Actions |
+|-------|-------------|
+| 1. Knowledge | Request sources, explore codebase, document environment |
+| 2. Planning | Create PLAN.md with hypotheses, get user approval |
+| 3. Baseline | Run 10+ times per input, verify CV < 10%, test correctness |
+| 4. Testing | Branch per experiment, run benchmarks, verify correctness |
+| 5. Tracking | Update TRACKER.md after every experiment |
+| 6. Observability | Generate HTML report, serve on benchmark machine |
+| 7. Notifications | Notify on completion, errors, significant findings |
+| 8. Iteration | Compound testing, final report |
+
+### Decision Criteria
+
+| Result | Action |
+|--------|--------|
+| >5% improvement, correct | **KEEP** |
+| 2-5% improvement, correct | **MAYBE** (backlog) |
+| <2% improvement | **DISCARD** |
+| Any regression | **DISCARD** |
+| Incorrect output | **REJECT** |
+
+### Branch Naming
+
+```bash
+bench/001-optimization-name       # During testing
+bench/001-optimization-name-KEEP  # If successful
+bench/001-optimization-name-DISCARD  # If rejected
+```
+
+### Key Commands
+
+```bash
+# Hyperfine benchmark
+hyperfine --warmup 3 --runs 10 --export-json results.json 'command'
+
+# GPU temperature check (should be <50°C before starting)
+nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader
+
+# Serve report
+python3 -m http.server 8080 --directory benchmarks/report
+```
+
 ---
 
 ## Quick Reference Checklists
@@ -321,3 +465,20 @@ ziskemu -e <ELF> -i <INPUT> -D -X -S
 ### After Applying PR Feedback
 
 - [ ] PR description updated to reflect changes
+
+### Before Benchmarking
+
+- [ ] Sources gathered and read
+- [ ] Plan created and approved
+- [ ] Environment documented
+- [ ] Baseline established (10+ runs, CV < 10%)
+- [ ] Correctness verified
+- [ ] Multiple diverse inputs selected
+
+### After Each Benchmark Experiment
+
+- [ ] Cooldown observed (60s minimum)
+- [ ] Results recorded immediately
+- [ ] Correctness tested
+- [ ] TRACKER.md updated
+- [ ] Branch renamed (KEEP/DISCARD)
