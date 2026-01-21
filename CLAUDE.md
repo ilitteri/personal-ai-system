@@ -19,9 +19,7 @@ Where workstream status is one of:
 ## Context Management
 
 **At conversation start:**
-1. Determine project identity:
-   - If git repo: extract org/repo from remote (e.g., `org/repo` → `org-repo`)
-   - If not git: use directory name
+1. Determine project identity by running `~/Personal/get-project-identity.sh` (do NOT guess)
 2. Look for `~/Personal/contexts/{project-identity}.md`
 3. If exists: read it
 4. If missing: create from `~/Personal/contexts/_template.md`
